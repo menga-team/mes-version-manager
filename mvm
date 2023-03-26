@@ -1,0 +1,68 @@
+#!/usr/bin/python3
+
+import sys
+import os
+
+explanations = {"help": "mvm help <argument>: explain a given argument, list all arguments if none given",
+                "install": "mvm install: install this script on your pc, requires root privileges",
+                "uninstall": "mvm uninstall: remove this script from your pc, requires root privileges",
+                "parameter": "mvm parameter <action> <parameter>: perform given action (get/set) on given project\n"
+                             "                                    parameter in mesproj.json. When setting versions,\n"
+                             "                                    put 'latest' or specify an older commit by its SHA.",
+                "check": "mvm check: verify that the build system and its dependencies exits and are up to date,\n"
+                         "           according to the parameters specified in mesproj.json",
+                "update": "mvm update: update the build system and its dependencies to their version specified in\n"
+                          "            mesproj.json"}
+
+
+def _checkroot(msg):
+    if os.getuid() != 0:
+        print(msg)
+        return False
+    return True
+
+
+def install(args):
+    if not _checkroot("Root privileges required to copy script into /usr/local/bin. Kindly run with sudo."): return
+    os.system("cp mvm /usr/local/bin/mvm")
+
+
+def uninstall(args):
+    if not _checkroot("Root privileges required to remove script from /usr/local/bin. Kindly run with sudo."): return
+    os.system("rm /usr/local/bin/mvm")
+
+
+def parameter(args):
+    return
+
+
+def check(args):
+    return
+
+
+def update(args):
+    return
+
+
+def help(args):
+    if len(args) <= 1:
+        print("Here's a list of possible arguments:\n"
+              "    help - show this list\n"
+              "    install - install itself\n"
+              "    uninstall - remove itself\n"
+              "    parameter - get/set project parameters\n"
+              "    check - verify project is up to date\n"
+              "    update - update project\n"
+              "Try 'mvm help <argument>' to get a more detailed explanation.")
+    else:
+        print(explanations[args[1]])
+
+
+arguments = sys.argv[1:]
+if len(arguments) == 0:
+    print("Not enough arguments.")
+    exit()
+try:
+    locals().get(arguments[0])(arguments)
+except TypeError:
+    print(f'No argument named "{arguments[0]}". ' + "Run 'mvm help' for a list of arguments.")
