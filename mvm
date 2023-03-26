@@ -2,6 +2,9 @@
 
 import sys
 import os
+import json
+
+param_dict = {}
 
 explanations = {"help": "mvm help <argument>: explain a given argument, list all arguments if none given",
                 "install": "mvm install: install this script on your pc, requires root privileges",
@@ -22,25 +25,70 @@ def _checkroot(msg):
     return True
 
 
+def _checkproject():
+    if not os.path.exists('mesproj.json'):
+        print("'mesproj.json' not found. Verify you're inside the correct directory.")
+        exit()
+
+
+def _update_dict():
+    global param_dict
+    with open("mesproj.json", "r") as file:
+        param_dict = json.load(file)
+    if not 'mes_version' in param_dict or not 'vmes_version' in param_dict or not 'mbs_version' in param_dict:
+        print("Error: mesproj.json is incomplete.")
+        exit()
+
+
+def _getparam(param):
+    try:
+        return param_dict[param]
+    except KeyError:
+        print(f"Error: Key '{param}' not found in mesprj.json")
+        exit()
+
+
+def _setparam(param, value):
+    param_dict[param] = value
+
+    with open("replayScript.json", "w") as jsonFile:
+        json.dump(param_dict, jsonFile)
+
+
 def install(args):
-    if not _checkroot("Root privileges required to copy script into /usr/local/bin. Kindly run with sudo."): return
+    if not _checkroot("Error: Root privileges required to copy script into /usr/local/bin. Kindly run with sudo."): return
     os.system("cp mvm /usr/local/bin/mvm")
 
 
 def uninstall(args):
-    if not _checkroot("Root privileges required to remove script from /usr/local/bin. Kindly run with sudo."): return
+    if not _checkroot("Error: Root privileges required to remove script from /usr/local/bin. Kindly run with sudo."): return
     os.system("rm /usr/local/bin/mvm")
 
 
 def parameter(args):
-    return
+    if len(args) <= 2:
+        print("Error: Not enough arguments. Usage: mvm parameter <action> <parameter>")
+        return
+    _checkproject()
+    _update_dict()
+    if args[1] == "get":
+        print(_getparam(args[2]))
+    elif args[1] == "set":
+        if len(args) <= 3:
+            print(f"Error: Not enough arguments. Please specify the value to be assigned to {args[2]}")
+            return
+        _setparam(args[2], args[3])
+    else:
+        print(f"Error: Unknown action: '{args[1]}'. Usage: mvm parameter <action> <parameter>")
 
 
 def check(args):
+    _checkproject()
     return
 
 
 def update(args):
+    _checkproject()
     return
 
 
@@ -55,14 +103,17 @@ def help(args):
               "    update - update project\n"
               "Try 'mvm help <argument>' to get a more detailed explanation.")
     else:
-        print(explanations[args[1]])
+        try:
+            print(explanations[args[1]])
+        except KeyError:
+            print(f"Error: no argument named '{args[1]}'")
 
 
 arguments = sys.argv[1:]
 if len(arguments) == 0:
-    print("Not enough arguments.")
+    print("Error: Not enough arguments. Run 'mvm help' for a list of arguments.")
     exit()
 try:
     locals().get(arguments[0])(arguments)
 except TypeError:
-    print(f'No argument named "{arguments[0]}". ' + "Run 'mvm help' for a list of arguments.")
+    print(f'Error: No argument named "{arguments[0]}". ' + "Run 'mvm help' for a list of arguments.")
