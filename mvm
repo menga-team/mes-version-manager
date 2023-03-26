@@ -3,6 +3,7 @@
 import sys
 import os
 import json
+import subprocess
 
 param_dict = {}
 
@@ -15,7 +16,10 @@ explanations = {"help": "mvm help <argument>: explain a given argument, list all
                 "check": "mvm check: verify that the build system and its dependencies exits and are up to date,\n"
                          "           according to the parameters specified in mesproj.json",
                 "update": "mvm update: update the build system and its dependencies to their version specified in\n"
-                          "            mesproj.json"}
+                          "            mesproj.json",
+                "simulate": "mvm simulate: idk",
+                "assets": "mvm assets: idk",
+                "flash": "mvm flash: idk"}
 
 
 def _checkroot(msg):
@@ -32,6 +36,7 @@ def _checkproject():
 
 
 def _update_dict():
+    _checkproject()
     global param_dict
     with open("mesproj.json", "r") as file:
         param_dict = json.load(file)
@@ -44,7 +49,7 @@ def _getparam(param):
     try:
         return param_dict[param]
     except KeyError:
-        print(f"Error: Key '{param}' not found in mesprj.json")
+        print(f"Error: Key '{param}' not found in mesproj.json")
         exit()
 
 
@@ -83,12 +88,43 @@ def parameter(args):
 
 
 def check(args):
+    _update_dict()
     _checkproject()
-    return
+    for i in ["mbs", "mes", "vmes"]:
+        target_version = _getparam(f"{i}_version")
+        if os.path.exists(f".{i}"):
+            version = subprocess.run(f"cd .{i}; git rev-parse HEAD", capture_output=True, shell=True).stdout.decode().rstrip()
+            version_remote = subprocess.run(f"cd .{i}; git rev-parse origin/main", capture_output=True, shell=True).stdout.decode().rstrip()
+            if version == version_remote and not version == target_version:  # if target version is latest SHA, dont change version to 'latest'
+                version = "latest"
+            print(f"{i}: " + ("OK ✓" if version == target_version else "BAD ✗") + '\033[90m' f" (installed: {version[:7]}, required: {target_version[:7]})" '\033[0m')
+        else:
+            print(f"{i}: BAD ✗" '\033[90m' f" (installed: none, required: {target_version[:7]})" '\033[0m')
 
 
 def update(args):
+    _update_dict()
     _checkproject()
+    repo_names = {"mbs": "mes-build-system", "mes": "MES", "vmes": "Virtual-MES"}
+    for i in ["mbs", "mes", "vmes"]:
+        target_version = _getparam(f"{i}_version")
+        if os.path.exists(f".{i}"):
+            version = subprocess.run(f"cd .{i}; git rev-parse HEAD", capture_output=True, shell=True).stdout.decode().rstrip()
+            version_remote = subprocess.run(f"cd .{i}; git rev-parse origin/main", capture_output=True, shell=True).stdout.decode().rstrip()
+            if version == version_remote and not version == target_version:  # if target version is latest SHA, dont change version to 'latest'
+                version = "latest"
+            if version != target_version:
+                os.system(f"rm -rf .{i}")
+                os.system(f"git clone https://github.com/menga-team/{repo_names[i]}")
+                os.system(f"mv {repo_names[i]} .{i}")
+                if target_version != "latest":
+                    os.system(f"cd .{i}; git reset --hard {target_version}")
+        else:
+            os.system(f"git clone https://github.com/menga-team/{repo_names[i]}")
+            os.system(f"mv {repo_names[i]} .{i}")
+            if target_version != "latest":
+                os.system(f"cd .{i}; git reset --hard {target_version}")
+            pass
     return
 
 
@@ -101,6 +137,9 @@ def help(args):
               "    parameter - get/set project parameters\n"
               "    check - verify project is up to date\n"
               "    update - update project\n"
+              "    simulate - idk\n"
+              "    assets - idk\n"
+              "    flash - idk\n"
               "Try 'mvm help <argument>' to get a more detailed explanation.")
     else:
         try:
