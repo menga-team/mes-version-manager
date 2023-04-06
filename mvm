@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import sys
 import os
@@ -16,7 +16,8 @@ explanations = {"help": "mvm help <argument>: explain a given argument, list all
                 "check": "mvm check: verify that the build system and its dependencies exits and are up to date,\n"
                          "           according to the parameters specified in mesproj.json",
                 "update": "mvm update: update the build system and its dependencies to their version specified in\n"
-                          "            mesproj.json",
+                          "            mesproj.json. Use -f or --force to update even if the correct versions are\n"
+                          "            installed.",
                 "simulate": "mvm simulate: idk",
                 "assets": "mvm assets: idk",
                 "flash": "mvm flash: idk"}
@@ -105,27 +106,53 @@ def check(args):
 def update(args):
     _update_dict()
     _checkproject()
+    updated = False
     repo_names = {"mbs": "mes-build-system", "mes": "MES", "vmes": "Virtual-MES"}
-    for i in ["mbs", "mes", "vmes"]:
+    for i in ["mes", "vmes"]:
         target_version = _getparam(f"{i}_version")
         if os.path.exists(f".{i}"):
             version = subprocess.run(f"cd .{i}; git rev-parse HEAD", capture_output=True, shell=True).stdout.decode().rstrip()
             version_remote = subprocess.run(f"cd .{i}; git rev-parse origin/main", capture_output=True, shell=True).stdout.decode().rstrip()
             if version == version_remote and not version == target_version:  # if target version is latest SHA, dont change version to 'latest'
                 version = "latest"
-            if version != target_version:
+            if (version != target_version) or (len(args) > 1 and (args[1] == "--force" or args[1] == "-f")):
+                updated = True
                 os.system(f"rm -rf .{i}")
                 os.system(f"git clone https://github.com/menga-team/{repo_names[i]}")
                 os.system(f"mv {repo_names[i]} .{i}")
                 if target_version != "latest":
                     os.system(f"cd .{i}; git reset --hard {target_version}")
         else:
+            updated = True
             os.system(f"git clone https://github.com/menga-team/{repo_names[i]}")
             os.system(f"mv {repo_names[i]} .{i}")
             if target_version != "latest":
                 os.system(f"cd .{i}; git reset --hard {target_version}")
-            pass
+    if not updated:
+        print("Nothing to update, you're all set!")
     return
+
+
+def simulate(args):
+    os.system("cd .mbs; make simulate")
+
+
+def assets(args):
+    os.system("cd .mbs; make assets")
+
+
+def flash(args):
+    try:
+        import elftools
+    except ModuleNotFoundError:
+        print("Error: elftools is not installed. Run 'pip install pyelftools' to install.")
+        exit()
+    try:
+        import jinja2
+    except ModuleNotFoundError:
+        print("Error: jinja2 is not installed. Run 'pip install Jinja2' to install.")
+        exit()
+    os.system("cd .mbs; make flash-setup; make flash")
 
 
 def help(args):
