@@ -8,7 +8,7 @@ import subprocess
 param_dict = {}
 
 explanations = {"help": "mvm help <argument>: explain a given argument, list all arguments if none given",
-                "install": "mvm install: install this script on your pc, requires root privileges",
+                "upgrade": "mvm upgrade: upgrades mvm to its newest version, requires root privileges.",
                 "uninstall": "mvm uninstall: remove this script from your pc, requires root privileges",
                 "parameter": "mvm parameter <action> <parameter>: perform given action (get/set) on given project\n"
                              "                                    parameter in mesproj.json. When setting versions,\n"
@@ -20,8 +20,7 @@ explanations = {"help": "mvm help <argument>: explain a given argument, list all
                           "            installed.",
                 "simulate": "mvm simulate: simulate project using vmes.",
                 "assets": "mvm assets: process assets.",
-                "flash": "mvm flash: flash project to mes cpu",
-                "upgrade": "mvm upgrade: install newest version of mvm."}
+                "flash": "mvm flash: flash project to mes cpu"}
 
 
 def _checkroot(msg):
@@ -171,8 +170,8 @@ def help(args):
     if len(args) <= 1:
         print("Here's a list of possible arguments:\n"
               "    help - show this list\n"
-              "    install - install itself\n"
-              "    uninstall - remove itself\n"
+              "    upgrade - update mvm\n"
+              "    uninstall - remove mvm\n"
               "    parameter - get/set project parameters\n"
               "    check - verify project is up to date\n"
               "    update - update project\n"
@@ -195,5 +194,5 @@ try:
     locals().get(arguments[0])(arguments)
 except TypeError:
     print(f'Error: No argument named "{arguments[0]}". ' + "Run 'mvm help' for a list of arguments.")
-if not _checkmvm():
+if not _checkmvm() and arguments[0] != "upgrade" and arguments[0] != "uninstall":
     print("Warning: Looks like mvm is not up to date! Please install its newest version using 'mvm upgrade'")
