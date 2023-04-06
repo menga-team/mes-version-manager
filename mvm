@@ -37,7 +37,7 @@ def _checkproject():
 
 
 def _checkmvm():
-    if os.path.exists("~/.local/share/mvm"):
+    if os.path.exists(os.path.expanduser("~/.local/share/mvm")):
         version = subprocess.run("cd ~/.local/share/mvm; git rev-parse HEAD", capture_output=True, shell=True).stdout.decode().rstrip()
         version_remote = subprocess.run("cd ~/.local/share/mvm; git rev-parse origin/main", capture_output=True, shell=True).stdout.decode().rstrip()
         if version == version_remote:
@@ -81,7 +81,7 @@ def upgrade(args):
 def uninstall(args):
     if not _checkroot("Error: Root privileges required to remove script from /usr/local/bin. Kindly run with sudo."): return
     os.system("rm /usr/local/bin/mvm")
-    if os.path.exists("~/.local/share/mvm"):
+    if os.path.exists(os.path.expanduser("~/.local/share/mvm")):
         os.system("rm -rf ~/.local/share/mvm")
 
 
