@@ -191,10 +191,11 @@ def help(args):
 arguments = sys.argv[1:]
 if len(arguments) == 0:
     print("Error: Not enough arguments. Run 'mvm help' for a list of arguments.")
-    exit()
-try:
-    locals().get(arguments[0])(arguments)
-except TypeError:
-    print(f'Error: No argument named "{arguments[0]}". ' + "Run 'mvm help' for a list of arguments.")
-if not _checkmvm() and arguments[0] != "upgrade" and arguments[0] != "uninstall":
-    print("Warning: Looks like mvm is not up to date! Please install its newest version using 'mvm upgrade'")
+else:
+    try:
+        locals().get(arguments[0])(arguments)
+    except TypeError:
+        print(f'Error: No argument named "{arguments[0]}". ' + "Run 'mvm help' for a list of arguments.")
+if not _checkmvm():
+    if len(arguments) == 0 or arguments[0] != "upgrade" and arguments[0] != "uninstall":
+        print("Warning: Looks like mvm is not up to date! Please install its newest version using 'mvm upgrade'")
