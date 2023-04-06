@@ -81,6 +81,8 @@ def upgrade(args):
 def uninstall(args):
     if not _checkroot("Error: Root privileges required to remove script from /usr/local/bin. Kindly run with sudo."): return
     os.system("rm /usr/local/bin/mvm")
+    if os.path.exists("~/.local/share/mvm"):
+        os.system("rm -rf ~/.local/share/mvm")
 
 
 def parameter(args):
