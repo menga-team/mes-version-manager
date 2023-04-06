@@ -108,7 +108,7 @@ def update(args):
     _checkproject()
     updated = False
     repo_names = {"mbs": "mes-build-system", "mes": "MES", "vmes": "Virtual-MES"}
-    for i in ["mes", "vmes"]:
+    for i in ["mbs", "mes", "vmes"]:
         target_version = _getparam(f"{i}_version")
         if os.path.exists(f".{i}"):
             version = subprocess.run(f"cd .{i}; git rev-parse HEAD", capture_output=True, shell=True).stdout.decode().rstrip()
