@@ -38,6 +38,7 @@ def _checkproject():
 
 def _checkmvm():
     if os.path.exists(os.path.expanduser("~/.local/share/mvm")):
+        os.system("cd ~/.local/share/mvm; git fetch")
         version = subprocess.run("cd ~/.local/share/mvm; git rev-parse HEAD", capture_output=True, shell=True).stdout.decode().rstrip()
         version_remote = subprocess.run("cd ~/.local/share/mvm; git rev-parse origin/main", capture_output=True, shell=True).stdout.decode().rstrip()
         if version == version_remote:
