@@ -108,6 +108,7 @@ def check(args):
     for i in ["mbs", "mes", "vmes"]:
         target_version = _getparam(f"{i}_version")
         if os.path.exists(f".{i}"):
+            os.system(f"cd .{i}; git fetch")
             version = subprocess.run(f"cd .{i}; git rev-parse HEAD", capture_output=True, shell=True).stdout.decode().rstrip()
             version_remote = subprocess.run(f"cd .{i}; git rev-parse origin/main", capture_output=True, shell=True).stdout.decode().rstrip()
             if version == version_remote and not version == target_version:  # if target version is latest SHA, dont change version to 'latest'
@@ -125,6 +126,7 @@ def update(args):
     for i in ["mbs", "mes", "vmes"]:
         target_version = _getparam(f"{i}_version")
         if os.path.exists(f".{i}"):
+            os.system(f"cd .{i}; git fetch")
             version = subprocess.run(f"cd .{i}; git rev-parse HEAD", capture_output=True, shell=True).stdout.decode().rstrip()
             version_remote = subprocess.run(f"cd .{i}; git rev-parse origin/main", capture_output=True, shell=True).stdout.decode().rstrip()
             if version == version_remote and not version == target_version:  # if target version is latest SHA, dont change version to 'latest'
