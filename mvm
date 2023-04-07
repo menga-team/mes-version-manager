@@ -76,7 +76,9 @@ def upgrade(args):
         print("Nothing to upgrade, mvm is up to date.")
         return
     os.system("rm -rf ~/.local/share/mvm")
-    os.system(f"cd ~/.local/share; git clone https://github.com/menga-team/mes-version-manager; mv mes-version-manager mvm; cp mvm/mvm /usr/local/bin/mvm")
+    subprocess.run("cd ~/.local/share; sudo -u $SUDO_USER git clone https://github.com/menga-team/mes-version-manager; mv mes-version-manager mvm;", shell=True)
+    subprocess.run("cd ~/.local/share/mvm; sudo -u $SUDO_USER git fetch", shell=True)
+    os.system("cd ~/.local/share; cp mvm/mvm /usr/local/bin/mvm")
 
 
 def uninstall(args):
