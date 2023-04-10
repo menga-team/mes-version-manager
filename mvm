@@ -84,7 +84,7 @@ def upgrade(args):
 def uninstall(args):
     if not _checkroot("Error: Root privileges required to remove script from /usr/local/bin. Kindly run with sudo."): return
     os.system("rm /usr/local/bin/mvm")
-    subprocess.run("sudo -u $SUDO_USER rm -rf ~/.local/share/mvm")
+    subprocess.run("sudo -u $SUDO_USER rm -rf ~/.local/share/mvm", shell=True)
 
 
 def parameter(args):
