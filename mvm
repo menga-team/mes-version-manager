@@ -38,7 +38,7 @@ def _checkproject():
 
 def _checkmvm():
     if os.path.exists(os.path.expanduser("~/.local/share/mvm")):
-        os.system("cd ~/.local/share/mvm; git fetch")
+        os.system("cd ~/.local/share/mvm; git fetch --quiet")
         version = subprocess.run("cd ~/.local/share/mvm; git rev-parse HEAD", capture_output=True, shell=True).stdout.decode().rstrip()
         version_remote = subprocess.run("cd ~/.local/share/mvm; git rev-parse origin/main", capture_output=True, shell=True).stdout.decode().rstrip()
         if version == version_remote:
@@ -76,16 +76,15 @@ def upgrade(args):
         print("Nothing to upgrade, mvm is up to date.")
         return
     os.system("rm -rf ~/.local/share/mvm")
-    subprocess.run("cd ~/.local/share; sudo -u $SUDO_USER git clone https://github.com/menga-team/mes-version-manager; mv mes-version-manager mvm;", shell=True)
-    subprocess.run("cd ~/.local/share/mvm; sudo -u $SUDO_USER git fetch --quiet", shell=True)
-    os.system("cd ~/.local/share; cp mvm/mvm /usr/local/bin/mvm")
+    subprocess.run("sudo -u $SUDO_USER cd ~/.local/share; sudo -u $SUDO_USER git clone https://github.com/menga-team/mes-version-manager; mv mes-version-manager mvm;", shell=True)
+    subprocess.run("sudo -u $SUDO_USER cd ~/.local/share/mvm; sudo -u $SUDO_USER git fetch --quiet", shell=True)
+    subprocess.run("sudo -u $SUDO_USER cd ~/.local/share; cp mvm/mvm /usr/local/bin/mvm", shell=True)
 
 
 def uninstall(args):
     if not _checkroot("Error: Root privileges required to remove script from /usr/local/bin. Kindly run with sudo."): return
     os.system("rm /usr/local/bin/mvm")
-    if os.path.exists(os.path.expanduser("~/.local/share/mvm")):
-        os.system("rm -rf ~/.local/share/mvm")
+    subprocess.run("sudo -u $SUDO_USER rm -rf ~/.local/share/mvm")
 
 
 def parameter(args):
@@ -111,7 +110,7 @@ def check(args):
     for i in ["mbs", "mes", "vmes"]:
         target_version = _getparam(f"{i}_version")
         if os.path.exists(f".{i}"):
-            os.system(f"cd .{i}; git fetch")
+            os.system(f"cd .{i}; git fetch --quiet")
             version = subprocess.run(f"cd .{i}; git rev-parse HEAD", capture_output=True, shell=True).stdout.decode().rstrip()
             version_remote = subprocess.run(f"cd .{i}; git rev-parse origin/main", capture_output=True, shell=True).stdout.decode().rstrip()
             if version == version_remote and not version == target_version:  # if target version is latest SHA, dont change version to 'latest'
@@ -129,7 +128,7 @@ def update(args):
     for i in ["mbs", "mes", "vmes"]:
         target_version = _getparam(f"{i}_version")
         if os.path.exists(f".{i}"):
-            os.system(f"cd .{i}; git fetch")
+            os.system(f"cd .{i}; git fetch --quiet")
             version = subprocess.run(f"cd .{i}; git rev-parse HEAD", capture_output=True, shell=True).stdout.decode().rstrip()
             version_remote = subprocess.run(f"cd .{i}; git rev-parse origin/main", capture_output=True, shell=True).stdout.decode().rstrip()
             if version == version_remote and not version == target_version:  # if target version is latest SHA, dont change version to 'latest'
