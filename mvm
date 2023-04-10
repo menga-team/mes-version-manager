@@ -32,28 +32,21 @@ def _checkroot(msg):
 
 def _checkproject():
     if not os.path.exists('mesproj.json'):
-        print("'mesproj.json' not found. Verify you're inside the correct directory.")
-        exit()
-
-
-def _checkmvm():
-    if os.path.exists(os.path.expanduser("~/.local/share/mvm")):
-        os.system("cd ~/.local/share/mvm; git fetch --quiet")
-        version = subprocess.run("cd ~/.local/share/mvm; git rev-parse HEAD", capture_output=True, shell=True).stdout.decode().rstrip()
-        version_remote = subprocess.run("cd ~/.local/share/mvm; git rev-parse origin/main", capture_output=True, shell=True).stdout.decode().rstrip()
-        if version == version_remote:
-            return True
-    return False
+        print("Error: 'mesproj.json' not found. Verify you're inside the correct directory.")
+        return False
+    return True
 
 
 def _update_dict():
-    _checkproject()
+    if not _checkproject():
+        return False
     global param_dict
     with open("mesproj.json", "r") as file:
         param_dict = json.load(file)
     if not 'mes_version' in param_dict or not 'vmes_version' in param_dict or not 'mbs_version' in param_dict:
-        print("Error: mesproj.json is incomplete.")
-        exit()
+        print("Error: 'mesproj.json' is incomplete.")
+        return False
+    return True
 
 
 def _getparam(param):
@@ -72,27 +65,33 @@ def _setparam(param, value):
 
 def upgrade(args):
     if not _checkroot("Error: Root privileges required to copy script into /usr/local/bin. Kindly run with sudo."): return
-    if _checkmvm():
-        print("Nothing to upgrade, mvm is up to date.")
-        return
-    os.system("rm -rf ~/.local/share/mvm")
-    subprocess.run("sudo -u $SUDO_USER cd ~/.local/share; sudo -u $SUDO_USER git clone https://github.com/menga-team/mes-version-manager; mv mes-version-manager mvm;", shell=True)
-    subprocess.run("sudo -u $SUDO_USER cd ~/.local/share/mvm; sudo -u $SUDO_USER git fetch --quiet", shell=True)
-    subprocess.run("sudo -u $SUDO_USER cd ~/.local/share; cp mvm/mvm /usr/local/bin/mvm", shell=True)
+    # check if mvm folder exists
+    if subprocess.run('test -d $(eval echo ~${SUDO_USER})/.local/share/mvm && echo "yes" || echo "no"', capture_output=True, shell=True).stdout.decode().rstrip() == "yes":
+        subprocess.run("cd $(eval echo ~${SUDO_USER})/.local/share/mvm; sudo -u $SUDO_USER git fetch --quiet", shell=True)
+        version = subprocess.run("cd $(eval echo ~${SUDO_USER})/.local/share/mvm; sudo -u $SUDO_USER git rev-parse HEAD", capture_output=True, shell=True).stdout.decode().rstrip()
+        version_remote = subprocess.run("cd $(eval echo ~${SUDO_USER})/.local/share/mvm; sudo -u $SUDO_USER git rev-parse origin/main", capture_output=True, shell=True).stdout.decode().rstrip()
+        if version == version_remote:
+            print("Nothing to upgrade, mvm is up to date.")
+            return
+    # update mvm folder and copy script to bin
+    subprocess.run("rm -rf $(eval echo ~${SUDO_USER})/.local/share/mvm", shell=True)
+    subprocess.run("cd $(eval echo ~${SUDO_USER})/.local/share; sudo -u $SUDO_USER git clone https://github.com/menga-team/mes-version-manager; mv mes-version-manager mvm;", shell=True)
+    subprocess.run("cd $(eval echo ~${SUDO_USER})/.local/share/mvm; sudo -u $SUDO_USER git fetch --quiet", shell=True)
+    subprocess.run("cd $(eval echo ~${SUDO_USER})/.local/share; cp mvm/mvm /usr/local/bin/mvm", shell=True)
 
 
 def uninstall(args):
     if not _checkroot("Error: Root privileges required to remove script from /usr/local/bin. Kindly run with sudo."): return
     os.system("rm /usr/local/bin/mvm")
-    subprocess.run("sudo -u $SUDO_USER rm -rf ~/.local/share/mvm", shell=True)
+    subprocess.run("rm -rf $(eval echo ~${SUDO_USER})/.local/share/mvm", shell=True)
 
 
 def parameter(args):
     if len(args) <= 2:
         print("Error: Not enough arguments. Usage: mvm parameter <action> <parameter>")
         return
-    _checkproject()
-    _update_dict()
+    if not _update_dict():
+        return
     if args[1] == "get":
         print(_getparam(args[2]))
     elif args[1] == "set":
@@ -105,8 +104,8 @@ def parameter(args):
 
 
 def check(args):
-    _update_dict()
-    _checkproject()
+    if not _update_dict():
+        return
     for i in ["mbs", "mes", "vmes"]:
         target_version = _getparam(f"{i}_version")
         if os.path.exists(f".{i}"):
@@ -121,8 +120,8 @@ def check(args):
 
 
 def update(args):
-    _update_dict()
-    _checkproject()
+    if not _update_dict():
+        return
     updated = False
     repo_names = {"mbs": "mes-build-system", "mes": "MES", "vmes": "Virtual-MES"}
     for i in ["mbs", "mes", "vmes"]:
@@ -201,5 +200,10 @@ else:
     except TypeError:
         print(f'Error: No argument named "{arguments[0]}". ' + "Run 'mvm help' for a list of arguments.")
 if len(arguments) == 0 or arguments[0] != "upgrade" and arguments[0] != "uninstall":
-    if not _checkmvm():
-        print("Warning: Looks like mvm is not up to date! Please install its newest version using 'mvm upgrade'")
+    if os.path.exists(os.path.expanduser("~/.local/share/mvm")):
+        os.system("cd ~/.local/share/mvm; git fetch --quiet")
+        version = subprocess.run("cd ~/.local/share/mvm; git rev-parse HEAD", capture_output=True, shell=True).stdout.decode().rstrip()
+        version_remote = subprocess.run("cd ~/.local/share/mvm; git rev-parse origin/main", capture_output=True, shell=True).stdout.decode().rstrip()
+        if version == version_remote:
+            exit()
+    print("Warning: Looks like mvm is not up to date! Please install its newest version using 'mvm upgrade'")
