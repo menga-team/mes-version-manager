@@ -13,14 +13,15 @@ explanations = {"help": "mvm help <argument>: explain a given argument, list all
                 "parameter": "mvm parameter <action> <parameter>: perform given action (get/set) on given project\n"
                              "                                    parameter in mesproj.json. When setting versions,\n"
                              "                                    put 'latest' or specify an older commit by its SHA.",
-                "check": "mvm check: verify that the build system and its dependencies exits and are up to date,\n"
+                "check": "mvm check: verify that the build system and its dependencies exist and are up to date,\n"
                          "           according to the parameters specified in mesproj.json",
                 "update": "mvm update: update the build system and its dependencies to their version specified in\n"
                           "            mesproj.json. Use -f or --force to update even if the correct versions are\n"
                           "            installed.",
                 "simulate": "mvm simulate: simulate project using vmes.",
                 "assets": "mvm assets: process assets.",
-                "flash": "mvm flash: flash project to mes cpu"}
+                "flash": "mvm flash: flash project to mes cpu",
+                "iso": "mvm iso: create sd-card iso"}
 
 
 def _checkroot(msg):
@@ -171,6 +172,20 @@ def flash(args):
     os.system("cd .mbs; make flash-setup; make flash")
 
 
+def iso(args):
+    try:
+        import elftools
+    except ModuleNotFoundError:
+        print("Error: elftools is not installed. Run 'pip install pyelftools' to install.")
+        exit()
+    try:
+        import jinja2
+    except ModuleNotFoundError:
+        print("Error: jinja2 is not installed. Run 'pip install Jinja2' to install.")
+        exit()
+    os.system("cd .mbs; make flash-setup; make iso")
+
+
 def help(args):
     if len(args) <= 1:
         print("Here's a list of possible arguments:\n"
@@ -180,9 +195,10 @@ def help(args):
               "    parameter - get/set project parameters\n"
               "    check - verify project is up to date\n"
               "    update - update project\n"
-              "    simulate - idk\n"
-              "    assets - idk\n"
-              "    flash - idk\n"
+              "    simulate - virtual-mes simulation\n"
+              "    assets - create assets\n"
+              "    flash - flash to cpu\n"
+              "    iso - create iso\n"
               "Try 'mvm help <argument>' to get a more detailed explanation.")
     else:
         try:
